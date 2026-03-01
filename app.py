@@ -1,48 +1,48 @@
 import streamlit as st
-import subprocess
 import os
+import subprocess
+import sys
 
-st.set_page_config(page_title="YTCutter Cloud", page_icon="✂️")
+# FUNGSI DARURAT: Paksa instalasi yt-dlp jika Streamlit 'lupa'
+def install_tools():
+    try:
+        import yt_dlp
+    except ImportError:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "yt-dlp"])
+
+install_tools()
+
+st.set_page_config(page_title="GMQ YT Cutter", page_icon="✂️")
 st.title("✂️ Mesin Pemotong Video (Cloud)")
-st.write("Akses 24 Jam Nonstop dari HP-mu!")
 
-# Kolom Input
-link = st.text_input("Masukkan Link YouTube Utama:")
-judul = st.text_input("Judul File (Tanpa spasi):", "Hasil_Potongan")
-mulai = st.text_input("Waktu Mulai (contoh 00:00:10):")
-selesai = st.text_input("Waktu Selesai (contoh 00:00:20):")
+link = st.text_input("Link YouTube Utama:")
+mulai = st.text_input("Waktu Mulai (00:00:10):")
+selesai = st.text_input("Waktu Selesai (00:00:20):")
+judul = st.text_input("Nama File:", "video_gmq")
 
-if st.button("🚀 MULAI POTONG DI CLOUD"):
-    if link and judul and mulai and selesai:
-        st.info("⏳ Sedang memproses... Tunggu sampai tombol download muncul.")
-        output_file = f"{judul}.mp4"
-        
-        # Perintah sakti langsung ke mesin yt-dlp
+if st.button("🚀 MULAI POTONG"):
+    if link and mulai and selesai:
+        output = f"{judul}.mp4"
+        # Perintah langsung ke sistem
         perintah = [
             "yt-dlp",
             "--download-sections", f"*{mulai}-{selesai}",
             "--force-keyframes-at-cuts",
-            "-f", "bestvideo[vcodec^=avc][height<=1080]+bestaudio[ext=m4a]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best",
-            "--merge-output-format", "mp4",
+            "-f", "best",
             link,
-            "-o", output_file
+            "-o", output
         ]
         
+        st.info("Sedang memproses di Server... Tunggu ya.")
         try:
-            process = subprocess.run(perintah, capture_output=True, text=True)
-            if os.path.exists(output_file):
-                st.success("✅ Selesai! Klik tombol di bawah:")
-                with open(output_file, "rb") as file:
-                    st.download_button(
-                        label="📥 DOWNLOAD VIDEO KE HP",
-                        data=file,
-                        file_name=output_file,
-                        mime="video/mp4"
-                    )
+            subprocess.run(perintah, check=True)
+            if os.path.exists(output):
+                st.success("Berhasil! Klik tombol di bawah:")
+                with open(output, "rb") as f:
+                    st.download_button("📥 DOWNLOAD KE HP", f, file_name=output)
             else:
-                st.error("❌ Gagal memotong. Pastikan format waktu benar.")
-                st.code(process.stderr)
+                st.error("Gagal: File tidak tercipta.")
         except Exception as e:
-            st.error(f"❌ Terjadi kesalahan: {e}")
+            st.error(f"Error Sistem: {e}")
     else:
-        st.warning("⚠️ Isi semua kolom dulu!")
+        st.warning("Mohon isi semua kolom!")

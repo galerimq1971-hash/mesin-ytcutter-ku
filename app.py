@@ -29,7 +29,7 @@ if st.button("🚀 MULAI POTONG DI CLOUD"):
         ]
         
         try:
-            subprocess.run(perintah, check=True)
+            process = subprocess.run(perintah, capture_output=True, text=True)
             if os.path.exists(output_file):
                 st.success("✅ Selesai! Klik tombol di bawah:")
                 with open(output_file, "rb") as file:
@@ -40,7 +40,8 @@ if st.button("🚀 MULAI POTONG DI CLOUD"):
                         mime="video/mp4"
                     )
             else:
-                st.error("❌ File tidak ditemukan setelah diproses.")
+                st.error("❌ Gagal memotong. Pastikan format waktu benar.")
+                st.code(process.stderr)
         except Exception as e:
             st.error(f"❌ Terjadi kesalahan: {e}")
     else:

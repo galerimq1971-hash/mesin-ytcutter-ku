@@ -4,26 +4,20 @@ import os
 
 st.set_page_config(page_title="YTCutter Cloud", page_icon="✂️")
 st.title("✂️ Mesin Pemotong Video (Cloud)")
-st.write("Akses 24 Jam Nonstop! Potong video dan langsung simpan ke HP-mu.")
+st.write("Akses 24 Jam Nonstop dari HP-mu!")
 
 # Kolom Input
 link = st.text_input("Masukkan Link YouTube Utama:")
-judul = st.text_input("Judul File (Tanpa spasi/tanda baca):", "Hasil_Potongan")
-mulai = st.text_input("Waktu Mulai (contoh 02:45):")
-selesai = st.text_input("Waktu Selesai (contoh 05:10):")
+judul = st.text_input("Judul File (Tanpa spasi):", "Hasil_Potongan")
+mulai = st.text_input("Waktu Mulai (contoh 00:00:10):")
+selesai = st.text_input("Waktu Selesai (contoh 00:00:20):")
 
-# Tombol Aksi
 if st.button("🚀 MULAI POTONG DI CLOUD"):
     if link and judul and mulai and selesai:
-        st.info("⏳ Mesin Cloud sedang bekerja... Mohon tunggu dan jangan tutup halaman ini.")
-        
+        st.info("⏳ Sedang memproses... Tunggu sampai tombol download muncul.")
         output_file = f"{judul}.mp4"
         
-        # Hapus sisa file lama jika ada yang namanya sama
-        if os.path.exists(output_file):
-            os.remove(output_file)
-        
-        # Perintah yt-dlp versi Linux (Cloud) tanpa .exe
+        # Perintah sakti langsung ke mesin yt-dlp
         perintah = [
             "yt-dlp",
             "--download-sections", f"*{mulai}-{selesai}",
@@ -35,19 +29,19 @@ if st.button("🚀 MULAI POTONG DI CLOUD"):
         ]
         
         try:
-            # Eksekusi di server
             subprocess.run(perintah, check=True)
-            st.success("✅ Alhamdulillah Selesai! Silakan klik tombol di bawah untuk menyimpan ke HP-mu:")
-            
-            # Memunculkan tombol download ke HP/Laptop pengguna
-            with open(output_file, "rb") as file:
-                st.download_button(
-                    label="📥 DOWNLOAD VIDEO SEKARANG",
-                    data=file,
-                    file_name=output_file,
-                    mime="video/mp4"
-                )
+            if os.path.exists(output_file):
+                st.success("✅ Selesai! Klik tombol di bawah:")
+                with open(output_file, "rb") as file:
+                    st.download_button(
+                        label="📥 DOWNLOAD VIDEO KE HP",
+                        data=file,
+                        file_name=output_file,
+                        mime="video/mp4"
+                    )
+            else:
+                st.error("❌ File tidak ditemukan setelah diproses.")
         except Exception as e:
             st.error(f"❌ Terjadi kesalahan: {e}")
     else:
-        st.warning("⚠️ Harap isi semua kolom terlebih dahulu!")
+        st.warning("⚠️ Isi semua kolom dulu!")

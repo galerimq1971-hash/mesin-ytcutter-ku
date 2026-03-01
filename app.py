@@ -1,49 +1,49 @@
 import streamlit as st
-import subprocess
 import os
+import subprocess
+import sys
 
-# JUDUL APLIKASI
+# --- FUNGSI INSTALASI PAKSA (JANGAN DIUBAH) ---
+def install_requirements():
+    try:
+        import yt_dlp
+    except ImportError:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "yt-dlp"])
+
+# Jalankan instalasi sebelum aplikasi mulai
+install_requirements()
+import yt_dlp
+# ---------------------------------------------
+
 st.set_page_config(page_title="GMQ YT Cutter", page_icon="✂️")
-st.title("✂️ Mesin Pemotong Video (Cloud)")
-st.write("Akses dari HP - Server Madrasatul Qur'an")
+st.title("✂️ Mesin Pemotong Video Cloud")
 
-# INPUT DARI USER
-link = st.text_input("Masukkan Link YouTube:")
-judul = st.text_input("Judul Hasil Video (Tanpa Spasi):", "hasil_potongan")
-mulai = st.text_input("Waktu Mulai (Contoh: 00:00:10):")
-selesai = st.text_input("Waktu Selesai (Contoh: 00:00:20):")
+url = st.text_input("Link YouTube:")
+start = st.text_input("Mulai (00:00:10):")
+end = st.text_input("Selesai (00:00:20):")
+filename = st.text_input("Nama Video:", "video_gmq")
 
-if st.button("🚀 MULAI POTONG VIDEO"):
-    if link and judul and mulai and selesai:
-        output_file = f"{judul}.mp4"
-        st.info("⏳ Sedang memproses... Server sedang memotong video untukmu.")
+if st.button("🚀 PROSES SEKARANG"):
+    if url and start and end:
+        output = f"{filename}.mp4"
+        st.info("Sabar ya, server lagi memproses...")
         
-        # PERINTAH SAKTI (Memanggil yt-dlp sebagai aplikasi, bukan modul python)
-        perintah = [
-            "yt-dlp",
-            "--download-sections", f"*{mulai}-{selesai}",
-            "--force-keyframes-at-cuts",
-            "-f", "best",
-            link,
-            "-o", output_file
-        ]
+        ydl_opts = {
+            'format': 'best',
+            'outtmpl': output,
+            'download_ranges': lambda info_dict, ydl: [{'start_time': sum(x * int(t) for x, t in zip([3600, 60, 1], start.split(':'))), 'end_time': sum(x * int(t) for x, t in zip([3600, 60, 1], end.split(':')))}],
+            'force_keyframes_at_cuts': True,
+        }
         
         try:
-            # Jalankan proses pemotongan
-            subprocess.run(perintah, check=True)
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
             
-            if os.path.exists(output_file):
-                st.success("✅ SELESAI!")
-                with open(output_file, "rb") as file:
-                    st.download_button(
-                        label="📥 DOWNLOAD KE HP SEKARANG",
-                        data=file,
-                        file_name=output_file,
-                        mime="video/mp4"
-                    )
+            if os.path.exists(output):
+                st.success("Berhasil!")
+                with open(output, "rb") as f:
+                    st.download_button("📥 DOWNLOAD KE HP", f, file_name=output)
             else:
-                st.error("❌ Gagal: File tidak ditemukan di server.")
+                st.error("Gagal: File tidak tercipta.")
         except Exception as e:
-            st.error(f"❌ Terjadi kesalahan: {e}")
-    else:
-        st.warning("⚠️ Mohon isi semua kolom di atas!")
+            st.error(f"Sistem Error: {e}")
